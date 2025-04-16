@@ -6,13 +6,14 @@ const { Transform } = require("stream");
   const readStream = fs.createReadStream(__dirname + '/data/input', { encoding: 'utf8' })
   const writeStream = fs.createWriteStream(__dirname + '/data/output-' + time, { encoding: 'utf8' });
 
-  const splitLineTransform = new Transform({
-    transform(chunk, encoding, callback) {
-      const words = chunk.toString().split(/\s+/);
-      this.push(words.join('\n'));
-      callback();
-    },
-  });
+const filterAndSplitTransform = new Transform({
+  transform(chunk, encoding, callback) {
+    const words = chunk.toString()
+      .replace(/[^\w\s]/g, '') 
+      .split(/\s+/);           
+    callback(null, words.join('\n'));
+  }
+});
 
   const filterSymbolTransform = new Transform({
     transform(chunk, encoding, callback) {
