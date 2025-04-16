@@ -9,18 +9,11 @@ const { Transform } = require("stream");
 const filterAndSplitTransform = new Transform({
   transform(chunk, encoding, callback) {
     const words = chunk.toString()
-      .replace(/[^\w\s]/g, '') 
+      .replace(/[^a-zA-Z\s]/g, '')
       .split(/\s+/);           
     callback(null, words.join('\n'));
   }
 });
-
-  const filterSymbolTransform = new Transform({
-    transform(chunk, encoding, callback) {
-      // this.push(chunk.toString().replaceAll(/[^a-zA-Z\s]/g, '')+'\n')
-      callback(null, chunk.toString().replaceAll(/[^a-zA-Z\s]/g, '')+'\n');
-    },
-  });
 
   class IndexedCollector extends Transform {
     constructor() {
@@ -53,8 +46,7 @@ const filterAndSplitTransform = new Transform({
   const indexedCollector = new IndexedCollector();
 
   readStream
-      .pipe(filterSymbolTransform)
-      .pipe(splitLineTransform)
+      .pipe(filterAndSplitTransform)
       .pipe(indexedCollector)
       .pipe(writeStream);
 })()
