@@ -1,9 +1,47 @@
 var express = require('express');
+const {User, UserRepository} = require("../models/user");
 var router = express.Router();
 
-/* GET users listing. */
+var userRepository = new UserRepository();
+
 router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+  res.json(userRepository.getAll())
 });
 
-module.exports = router;
+router.get('/:id', (req, res) => {
+  const user = userRepository.getById(parseInt(req.params.id))
+  if (user) {
+    res.json(user)
+  } else {
+    res.status(404).send('User not found')
+  }
+});
+
+router.post('/', function(req, res, next) {
+  const newUser = new User(null, req.body.name, req.body.email)
+  const createdUser = userRepository.create(newUser)
+  res.status(201).json(createdUser)
+})
+
+// Update a user
+router.put('/:id', (req, res) => {
+  const updatedUser = { name: req.body.name, email: req.body.email }
+  const user = userRepository.update(parseInt(req.params.id), updatedUser)
+  if (user) {
+    res.json(user)
+  } else {
+    res.status(404).send('User not found')
+  }
+})
+
+// Delete a user
+router.delete('/:id', (req, res) => {
+  const user = userRepository.delete(parseInt(req.params.id))
+  if (user) {
+    res.status(204).send()
+  } else {
+    res.status(404).send('User not found')
+  }
+})
+
+module.exports = {router, userRepository}
