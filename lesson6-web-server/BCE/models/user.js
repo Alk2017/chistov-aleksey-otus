@@ -1,13 +1,15 @@
-const randomString = require("../models/utils");
+const random = require("../models/utils");
 
 // User Model
 class User {
     constructor(id = null,
-                name = randomString(8),
-                email = randomString(6) + '@mail.ru') {
+                name = random.randomString(8),
+                email = random.randomString(6) + '@mail.ru',
+                rating = [],) {
         this.id = id
         this.name = name
         this.email = email
+        this.rating = rating
     }
 }
 
@@ -45,6 +47,10 @@ class UserRepository {
             return this.#users.splice(index, 1)
         }
         return null
+    }
+
+    rating (id, rating) {
+    //     pass
     }
 }
 
