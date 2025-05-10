@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "dependencies": {
+    "mock-fs": "^5.5.0"
+  }
+}
