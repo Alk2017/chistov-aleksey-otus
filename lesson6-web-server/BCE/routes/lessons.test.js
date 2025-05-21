@@ -1,6 +1,6 @@
 const request = require('supertest')
 const express = require('express')
-var {lessonRouter, lessonRepository, lessonCommentsRepository} = require('./lesson.js');
+var {lessonRouter, lessonRepository, lessonCommentsRepository} = require('./lessons.js');
 const random = require("../models/utils");
 // const {Lesson} = require("../models/lesson");
 // const {LessonComment} = require("../models/lessonComment");

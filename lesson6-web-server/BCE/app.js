@@ -8,6 +8,7 @@ var indexRouter = require('./routes/index');
 var {userRouter} = require('./routes/users');
 var {courseRouter} = require('./routes/courses');
 var {lessonRouter} = require('./routes/lessons');
+const {mongoose} = require("mongoose");
 
 var app = express();
 
@@ -25,6 +26,11 @@ app.use('/', indexRouter);
 app.use('/users', userRouter);
 app.use('/courses', courseRouter);
 app.use('/lessons', lessonRouter);
+
+mongoose.connect(
+    'mongodb://localhost:27017/default_db?authSource=admin&directConnection=true'
+).then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('Error connecting to MongoDB:', err));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

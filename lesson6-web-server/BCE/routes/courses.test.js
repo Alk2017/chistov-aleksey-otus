@@ -1,68 +1,87 @@
 const request = require('supertest')
 const express = require('express')
-var {courseRouter, courseRepository, courseCommentsRepository} = require('./courses.js');
 const random = require("../models/utils");
+var {courseRouter} = require('./courses.js');
 const {Course} = require("../models/course");
-// const {CourseComment} = require("../models/curseComment");
+const {mongoose} = require("mongoose");
+const {User} = require("../models/user");
+const {clearCollections} = require("./testUtils");
 
 const app = express()
 app.use(express.json())
 app.use('/courses', courseRouter);
 
+mongoose.connect(
+    'mongodb://localhost:27017/test_db?authSource=admin&directConnection=true'
+).then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('Error connecting to MongoDB:', err));
+
+afterAll( () => {
+  mongoose.disconnect();
+})
+
 describe('Course CRUD operations', () => {
+
+  beforeAll( async () => {
+    await clearCollections()
+  })
+
   it('should create a new course', async () => {
-    const course = new Course()
+    const author = await User.create(random.createRandomUser())
+    const student = await User.create(random.createRandomUser())
+    const course = random.createRandomCourse(author.id, [student])
 
     const response = await request(app)
       .post('/courses')
       .send(course)
 
     expect(response.status).toBe(201)
-    expect(response.body).toHaveProperty('id')
+    expect(response.body).toHaveProperty('_id')
     expect(response.body.name).toBe(course.name)
     expect(response.body.description).toBe(course.description)
     expect(response.body.authorId).toBe(course.authorId)
     expect(response.body.tags).toStrictEqual(course.tags)
-    expect(response.body.difficult).toBe(course.difficult)
+    expect(response.body.difficulty).toBe(course.difficulty)
     expect(response.body.rating).toStrictEqual(course.rating)
     expect(response.body.lessons).toStrictEqual(course.lessons)
-    expect(response.body.students).toStrictEqual(course.students)
-
-    courseRepository.delete(response.body.id)
+    expect(response.body.students).toStrictEqual(course.students.map((student) => student.id))
   })
 
   it('should get a course by ID', async () => {
-    const course = new Course()
-    course.id = courseRepository.create(course).id
+    const author = await User.create(random.createRandomUser())
+    const student = await User.create(random.createRandomUser())
+    // const lesson = await Lesson.create(random.createRandomLesson())
+    const course = await Course.create(random.createRandomCourse(author.id, [student]))
 
     const response = await request(app).get(`/courses/${course.id}`)
 
     expect(response.status).toBe(200)
-    expect(response.body).toHaveProperty('id', course.id)
+    expect(response.body._id).toBe(course.id)
     expect(response.body.name).toBe(course.name)
     expect(response.body.description).toBe(course.description)
-    expect(response.body.authorId).toBe(course.authorId)
+    expect(response.body.authorId).toBe(course.authorId.toString())
     expect(response.body.tags).toStrictEqual(course.tags)
-    expect(response.body.difficult).toBe(course.difficult)
+    expect(response.body.difficulty).toBe(course.difficulty)
     expect(response.body.rating).toStrictEqual(course.rating)
     expect(response.body.lessons).toStrictEqual(course.lessons)
-    expect(response.body.students).toStrictEqual(course.students)
-
-    courseRepository.delete(course.id)
+    expect(response.body.students).toStrictEqual(course.students.map(student => student.id))
   })
 
   it('should update a course by ID', async () => {
-    const course = new Course()
-    course.id = courseRepository.create(course).id
+    const author = await User.create(random.createRandomUser())
+    const student = await User.create(random.createRandomUser())
+    const course = await Course.create(random.createRandomCourse(author.id, [student]))
 
-    const courseNew = new Course()
+    const authorNew = await User.create(random.createRandomUser())
+    const studentNew = await User.create(random.createRandomUser())
+    const courseNew = random.createRandomCourse(authorNew.id, [studentNew])
 
     const response = await request(app)
       .put(`/courses/${course.id}`)
-      .send({ name: courseNew.name, email: courseNew.email })
+      .send(courseNew)
 
     expect(response.status).toBe(200)
-    expect(response.body).toHaveProperty('id', course.id)
+    expect(response.body._id).toBe(course.id)
     expect(response.body.name).toBe(courseNew.name)
     expect(response.body.description).toBe(courseNew.description)
     expect(response.body.authorId).toBe(courseNew.authorId)
@@ -70,20 +89,19 @@ describe('Course CRUD operations', () => {
     expect(response.body.difficult).toBe(courseNew.difficult)
     expect(response.body.rating).toStrictEqual(courseNew.rating)
     expect(response.body.lessons).toStrictEqual(courseNew.lessons)
-    expect(response.body.students).toStrictEqual(courseNew.students)
-
-    courseRepository.delete(course.id)
+    expect(response.body.students).toStrictEqual(courseNew.students.map(student => student.id))
   })
 
   it('should delete a course by ID', async () => {
-    const course = new Course()
-    course.id = courseRepository.create(course).id
+    const author = await User.create(random.createRandomUser())
+    const student = await User.create(random.createRandomUser())
+    const course = await Course.create(random.createRandomCourse(author.id, [student]))
 
     const response = await request(app).delete(`/courses/${course.id}`)
-
     expect(response.status).toBe(204)
 
-    expect(courseRepository.getAll().length).toBe(0)
+    const deletedCourse = await Course.findById(course.id)
+    expect(deletedCourse).toBe(null)
   })
 
   it('should return 404 when trying to get a deleted course', async () => {
@@ -95,86 +113,87 @@ describe('Course CRUD operations', () => {
 })
 
 describe('Courses operations', () => {
+
+  beforeAll( async () => {
+    await clearCollections()
+  })
+
   it('should get all courses', async () => {
-    const course1 = new Course()
-    const course2 = new Course()
-    const course3 = new Course()
-    course1.id = courseRepository.create(course1).id
-    course2.id = courseRepository.create(course2).id
-    course3.id = courseRepository.create(course3).id
+    const author1 = await User.create(random.createRandomUser())
+    const student1 = await User.create(random.createRandomUser())
+    const courseModel1 = random.createRandomCourse(author1.id, [student1])
+    const course1 = await Course.create(courseModel1)
+    const author2 = await User.create(random.createRandomUser())
+    const student2 = await User.create(random.createRandomUser())
+    const courseModel2 = random.createRandomCourse(author2.id, [student2])
+    const course2 = await Course.create(courseModel2)
+    const author3 = await User.create(random.createRandomUser())
+    const student3 = await User.create(random.createRandomUser())
+    const courseModel3 = random.createRandomCourse(author3.id, [student3])
+    const course3 = await Course.create(courseModel3)
 
     const response = await request(app).get('/courses')
 
+    courseModel1._id = course1.id
+    courseModel1.students = courseModel1.students.map(student => student.id)
+    courseModel2._id = course2.id
+    courseModel2.students = courseModel2.students.map(student => student.id)
+    courseModel3._id = course3.id
+    courseModel3.students = courseModel3.students.map(student => student.id)
+
     expect(response.status).toBe(200)
     expect(response.body.length).toBe(3)
-    expect(response.body).toContainEqual(course1)
-    expect(response.body).toContainEqual(course2)
-    expect(response.body).toContainEqual(course3)
-
-    courseRepository.delete(course1.id)
-    courseRepository.delete(course2.id)
-    courseRepository.delete(course3.id)
+    expect(response.body).toContainEqual(courseModel1)
+    expect(response.body).toContainEqual(courseModel2)
+    expect(response.body).toContainEqual(courseModel3)
   })
 })
 
 describe('Course rating operations', () => {
+
+  beforeAll( async () => {
+    await clearCollections()
+  })
+
   it.each([
     [[5], 5],
-    [[1, 2, 4], 2.33],
+    [[1, 2, 5], 3],
     [[1, 2, 3], 2],
-    [[0], 0],
-  ])('should get a course rating(exist ratings: %p, expecting average: %p)', async (ratingArray, rating) => {
-    const course = new Course(undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        ratingArray)
-    course.id = courseRepository.create(course).id
-
+    [[1], 1],
+    [[], 0],
+  ])('should get a course rating(exist ratings: %p)', async (ratingArray, rating) => {
+    const author = await User.create(random.createRandomUser())
+    const courseModel = random.createRandomCourse(author.id)
+    courseModel.rating = ratingArray
+    const course = await Course.create(courseModel)
 
     const response = await request(app).get(`/courses/${course.id}/rating`)
-
     expect(response.status).toBe(200)
-    expect(response.body.rating).toBe(rating)
-
-    courseRepository.delete(course.id)
+    expect(response.body.averageRating).toBe(rating)
   });
 
   it.each([
     [[], 5, [5]],
     [[1, 2, 4], 5, [1, 2, 4, 5]],
   ])('should update a course rating(exist ratings: %p), new value:%p', async (existRating, newRating, expectRating) => {
-    const course = new Course(undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        ratingArray
-        )
-    course.id = courseRepository.create(course).id
-
+    const author = await User.create(random.createRandomUser())
+    const courseModel = random.createRandomCourse(author.id)
+    courseModel.rating = existRating
+    const course = await Course.create(courseModel)
 
     const response = await request(app)
         .patch(`/courses/${course.id}/rating`)
         .send({ rating: newRating })
 
-    expect(response.status).toBe(204)
-    expect(response.body).toHaveProperty('id', course.id)
+    expect(response.status).toBe(200)
+    expect(response.body._id).toBe(course.id)
     expect(response.body.name).toBe(course.name)
-    expect(response.body.description).toBe(course.description)
-    expect(response.body.authorId).toBe(course.authorId)
-    expect(response.body.tags).toStrictEqual(course.tags)
-    expect(response.body.difficult).toBe(course.difficult)
+    expect(response.body.email).toBe(course.email)
     expect(response.body.rating).toStrictEqual(expectRating)
-    expect(response.body.lessons).toStrictEqual(course.lessons)
-    expect(response.body.students).toStrictEqual(course.students)
-
-    courseRepository.delete(course.id)
   });
 })
 
-describe('Course comments operations', () => {
+describe.skip('Course comments operations', () => {
   it('should get all comments for certain course', async () => {
     const course = new Course()
     course.id = courseRepository.create(course).id

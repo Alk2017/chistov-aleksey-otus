@@ -50,4 +50,5 @@ lessonRouter.post('/:id/comments', (req, res) => {
 // pass
 });
 
-module.exports = {lessonRouter, lessonRepository, lessonCommentsRepository}
+// module.exports = {lessonRouter, lessonRepository, lessonCommentsRepository}
+module.exports = {lessonRouter}

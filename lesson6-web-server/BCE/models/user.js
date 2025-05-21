@@ -1,57 +1,38 @@
-const random = require("../models/utils");
+const {Schema, model} = require("mongoose")
 
-// User Model
-class User {
-    constructor(id = null,
-                name = random.randomString(8),
-                email = random.randomString(6) + '@mail.ru',
-                rating = [],) {
-        this.id = id
-        this.name = name
-        this.email = email
-        this.rating = rating
-    }
-}
-
-// User Repository
-class UserRepository {
-    #users = []
-    #nextId = 1
-
-    getAll () {
-        return this.#users
-    }
-
-    getById (id) {
-        return this.#users.find(user => user.id === id)
-    }
-
-    create (user) {
-        user.id = this.#nextId++
-        this.#users.push(user)
-        return user
-    }
-
-    update (id, updatedUser) {
-        const index = this.#users.findIndex(user => user.id === id)
-        if (index !== -1) {
-            this.#users[index] = { id, ...updatedUser }
-            return this.#users[index]
+const userSchema = new Schema(
+    {
+        name: {
+            type: String,
+            required: true
+        },
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+            index: true
+        },
+        role: {
+            type: String,
+            enum: ['ADMIN', 'AUTHOR', 'USER'],
+            default: 'USER'
+        },
+        rating: {
+            type: [Number],
+            validate: {
+                validator: (ratingArray) => {
+                    return !ratingArray || (ratingArray.every(num => num > 0 && num <= 5));
+                },
+                message: (p) => { return `'${p.value}' should be between 1 and 5` },
+            },
+            default: []
         }
-        return null
-    }
-
-    delete (id) {
-        const index = this.#users.findIndex(user => user.id === id)
-        if (index !== -1) {
-            return this.#users.splice(index, 1)
+    }, {
+        toJSON: {
+            versionKey: false,
         }
-        return null
     }
+);
 
-    rating (id, rating) {
-    //     pass
-    }
-}
-
-module.exports = {UserRepository, User};
+const User = model("User", userSchema);
+module.exports = {User};
