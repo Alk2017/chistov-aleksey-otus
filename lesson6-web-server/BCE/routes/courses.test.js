@@ -6,6 +6,7 @@ const {Course} = require("../models/course");
 const {mongoose} = require("mongoose");
 const {User} = require("../models/user");
 const {clearCollections} = require("./testUtils");
+const {CourseComment} = require("../models/courseComment");
 
 const app = express()
 app.use(express.json())
@@ -193,48 +194,59 @@ describe('Course rating operations', () => {
   });
 })
 
-describe.skip('Course comments operations', () => {
-  it('should get all comments for certain course', async () => {
-    const course = new Course()
-    course.id = courseRepository.create(course).id
-    const comment1 = new Comment(course.id)
-    const comment2 = new Comment(course.id)
-    const comment3 = new Comment(course.id)
-    comment1.id = courseCommentsRepository.create(comment1).id
-    comment2.id = courseCommentsRepository.create(comment2).id
-    comment3.id = courseCommentsRepository.create(comment3).id
+describe('Course comments operations', () => {
+  beforeAll( async () => {
+    await clearCollections()
+  })
 
-    const response = await request(app).get('/courses/${course.id}/comments')
+  it('should get all comments for certain course', async () => {
+    const author = await User.create(random.createRandomUser())
+    const user = await User.create(random.createRandomUser())
+    const course = await Course.create(random.createRandomCourse(author.id))
+    const commentModel1 = random.randomCourseComment(course.id, author.id)
+    const commentModel2 = random.randomCourseComment(course.id, author.id)
+    const commentModel3 = random.randomCourseComment(course.id, user.id)
+    const comment1 = await CourseComment.create(commentModel1)
+    const comment2 = await CourseComment.create(commentModel2)
+    const comment3 = await CourseComment.create(commentModel3)
+
+    const response = await request(app).get(`/courses/${course.id}/comments`)
+
+    commentModel1._id = comment1.id
+    commentModel2._id = comment2.id
+    commentModel3._id = comment3.id
+    commentModel1.createdAt = comment1.createdAt.toISOString()
+    commentModel2.createdAt = comment2.createdAt.toISOString()
+    commentModel3.createdAt = comment3.createdAt.toISOString()
+    commentModel1.updatedAt = comment1.updatedAt.toISOString()
+    commentModel2.updatedAt = comment2.updatedAt.toISOString()
+    commentModel3.updatedAt = comment3.updatedAt.toISOString()
+    delete commentModel1.courseId
+    delete commentModel2.courseId
+    delete commentModel3.courseId
 
     expect(response.status).toBe(200)
     expect(response.body.length).toBe(3)
-    expect(response.body).toContainEqual(comment1)
-    expect(response.body).toContainEqual(comment2)
-    expect(response.body).toContainEqual(comment3)
-
-    courseRepository.delete(course.id)
-    courseCommentsRepository.delete(comment1.id)
-    courseCommentsRepository.delete(comment2.id)
-    courseCommentsRepository.delete(comment3.id)
+    expect(response.body).toContainEqual(commentModel1)
+    expect(response.body).toContainEqual(commentModel2)
+    expect(response.body).toContainEqual(commentModel3)
   })
 
   it('should create comment for certain course', async () => {
-    const course = new Course()
-    course.id = courseRepository.create(course).id
-    const newComment = new Comment(course.id)
+    const author = await User.create(random.createRandomUser())
+    const course = await Course.create(random.createRandomCourse(author.id))
+    const newComment = random.randomCourseComment(course.id, author.id)
+    newComment.username = author.name
 
     const response = await request(app)
-        .post('/courses/${course.id}/comments')
+        .post(`/courses/${course.id}/comments`)
         .send(newComment)
 
+    console.log(response.body)
     expect(response.status).toBe(201)
-    expect(response.body).toHaveProperty('id')
+    expect(response.body).toHaveProperty('_id')
     expect(response.body.authorId).toBe(newComment.authorId)
-    expect(response.body.courseId).toBe(newComment.courseId)
-    expect(response.body.note).toBe(newComment.note)
-    expect(response.body.createDate).toBe(newComment.createDate)
-
-    courseRepository.delete(course.id)
-    courseCommentsRepository.delete(newComment.id)
+    expect(response.body.courseId).toBe(course.id)
+    expect(response.body.comment).toBe(newComment.comment)
   })
 })

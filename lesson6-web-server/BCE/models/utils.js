@@ -45,11 +45,20 @@ function createRandomCourse(authorId, students = []) {
     }
 }
 
+function randomCourseComment(courseId, authorId = undefined, comment= randomString(15)) {
+    return {
+        "authorId": authorId,
+        "courseId": courseId,
+        "comment": comment,
+    }
+}
+
 module.exports = {
     randomString,
     randomInt,
     generateRandomNumbers,
     generateRandomStrings,
     createRandomUser,
-    createRandomCourse
+    createRandomCourse,
+    randomCourseComment
 }

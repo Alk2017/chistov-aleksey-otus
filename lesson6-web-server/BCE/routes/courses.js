@@ -2,6 +2,7 @@ var express = require('express');
 const {Course} = require("../models/course");
 const {handleError} = require("./utils");
 const {User} = require("../models/user");
+const {CourseComment} = require("../models/courseComment");
 var courseRouter = express.Router();
 
 // var courseRepository = new CourseRepository();
@@ -38,7 +39,6 @@ courseRouter.post('/', async function (req, res, next) {
     } catch (err) {
         handleError(err, 'Course create server error', res)
     }
-
 })
 
 // Update a course
@@ -115,13 +115,30 @@ courseRouter.patch('/:id/rating', async (req, res) => {
 })
 
 // Get certain course comments
-courseRouter.get('/:id/comments', (req, res) => {
-    // pass
+courseRouter.get('/:id/comments', async (req, res) => {
+    const comments = await CourseComment.find({ courseId: req.params.id})
+    res.status(200).json(comments)
 });
 
 // Create certain course comment
-courseRouter.post('/:id/comments', (req, res) => {
-// pass
+courseRouter.post('/:id/comments', async (req, res) => {
+    try {
+        const commentDate = req.body;
+        const user = await User.findOne({ name : commentDate.username })
+        if (!commentDate || !commentDate.comment) {
+            res.status(400).json({message: '`comment` fields is required!'});
+        } else if (!user) {
+            res.status(400).json({message: `user with name: ${commentDate.username} not found!`});
+        } else {
+            commentDate.authorId = user._id
+            commentDate.courseId = req.params.id
+            const comment = new CourseComment(commentDate);
+            await comment.save();
+            res.status(201).json(comment);
+        }
+    } catch (err) {
+        handleError(err, 'Course create server error', res)
+    }
 });
 
 // module.exports = {courseRouter, courseRepository, courseCommentsRepository}
