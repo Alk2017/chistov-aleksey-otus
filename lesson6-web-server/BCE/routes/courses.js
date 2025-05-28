@@ -5,9 +5,6 @@ const {User} = require("../models/user");
 const {CourseComment} = require("../models/courseComment");
 var courseRouter = express.Router();
 
-// var courseRepository = new CourseRepository();
-// var courseCommentsRepository = new CourseCommentsRepository();
-
 // Get all courses
 courseRouter.get('/', async function (req, res, next) {
     const courses = await Course.find()

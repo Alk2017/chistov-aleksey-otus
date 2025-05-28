@@ -32,7 +32,7 @@ function createRandomUser() {
     }
 }
 
-function createRandomCourse(authorId, students = []) {
+function createRandomCourse(authorId, students = [], lessons = []) {
     return {
         name: randomString(15),
         description: randomString(20),
@@ -40,7 +40,7 @@ function createRandomCourse(authorId, students = []) {
         tags: [randomString(8), randomString(8), randomString(8)],
         difficulty: randomItemFromList(['EASY', 'MEDIUM', 'HARD']),
         rating: generateRandomNumbers(5, 1, 5),
-        lessons: [],
+        lessons: lessons,
         students: students
     }
 }
@@ -53,6 +53,25 @@ function randomCourseComment(courseId, authorId = undefined, comment= randomStri
     }
 }
 
+function createRandomLesson(authorId) {
+    return {
+        name: randomString(15),
+        description: randomString(30),
+        authorId: authorId,
+        links: [randomString(8), randomString(8), randomString(8)],
+        files: [randomString(8), randomString(8), randomString(8)],
+        rating: generateRandomNumbers(5, 1, 5),
+    }
+}
+
+function randomLessonComment(lessonId, authorId = undefined, comment= randomString(15)) {
+    return {
+        "authorId": authorId,
+        "lessonId": lessonId,
+        "comment": comment,
+    }
+}
+
 module.exports = {
     randomString,
     randomInt,
@@ -60,5 +79,7 @@ module.exports = {
     generateRandomStrings,
     createRandomUser,
     createRandomCourse,
-    randomCourseComment
+    randomCourseComment,
+    createRandomLesson,
+    randomLessonComment
 }

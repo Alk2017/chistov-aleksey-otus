@@ -7,6 +7,7 @@ const {mongoose} = require("mongoose");
 const {User} = require("../models/user");
 const {clearCollections} = require("./testUtils");
 const {CourseComment} = require("../models/courseComment");
+const {Lesson} = require("../models/lesson");
 
 const app = express()
 app.use(express.json())
@@ -30,7 +31,8 @@ describe('Course CRUD operations', () => {
   it('should create a new course', async () => {
     const author = await User.create(random.createRandomUser())
     const student = await User.create(random.createRandomUser())
-    const course = random.createRandomCourse(author.id, [student])
+    const lesson = await Lesson.create(random.createRandomLesson(author.id))
+    const course = random.createRandomCourse(author.id, [student], [lesson.id])
 
     const response = await request(app)
       .post('/courses')
@@ -51,8 +53,8 @@ describe('Course CRUD operations', () => {
   it('should get a course by ID', async () => {
     const author = await User.create(random.createRandomUser())
     const student = await User.create(random.createRandomUser())
-    // const lesson = await Lesson.create(random.createRandomLesson())
-    const course = await Course.create(random.createRandomCourse(author.id, [student]))
+    const lesson = await Lesson.create(random.createRandomLesson(author.id))
+    const course = await Course.create(random.createRandomCourse(author.id, [student], [lesson]))
 
     const response = await request(app).get(`/courses/${course.id}`)
 
@@ -64,7 +66,7 @@ describe('Course CRUD operations', () => {
     expect(response.body.tags).toStrictEqual(course.tags)
     expect(response.body.difficulty).toBe(course.difficulty)
     expect(response.body.rating).toStrictEqual(course.rating)
-    expect(response.body.lessons).toStrictEqual(course.lessons)
+    expect(response.body.lessons).toStrictEqual(course.lessons.map(lesson => lesson.id))
     expect(response.body.students).toStrictEqual(course.students.map(student => student.id))
   })
 

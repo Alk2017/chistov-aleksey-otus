@@ -7,7 +7,7 @@ const schema = new Schema(
             ref: 'User',
             required: true
         },
-        courseId: {
+        lessonId: {
             type: Schema.Types.ObjectId,
             ref: 'Course',
             required: true,
@@ -38,5 +38,5 @@ schema.index(
 );
 
 
-const CourseComment = model("CourseComment", schema);
-module.exports = {CourseComment};
+const LessonComment = model("LessonComment", schema);
+module.exports = {LessonComment};

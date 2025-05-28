@@ -1,7 +1,7 @@
 const random = require("./utils");
 const {Schema, model} = require("mongoose")
 
-const courseSchema = new Schema(
+const schema = new Schema(
     {
         name: {
             type: String,
@@ -17,13 +17,11 @@ const courseSchema = new Schema(
             ref: 'User',
             required: true
         },
-        tags: {
+        links: {
             type: [String]
         },
-        difficulty: {
-            type: String,
-            enum: ['EASY', 'MEDIUM', 'HARD'],
-            default: 'MEDIUM'
+        files: {
+            type: [String]
         },
         rating: {
             type: [Number],
@@ -34,9 +32,7 @@ const courseSchema = new Schema(
                 message: (p) => { return `'${p.value}' should be between 1 and 5` },
             },
             default: []
-        },
-        lessons: [{ type: Schema.Types.ObjectId, ref: 'Lesson' }],
-        students: [{ type: Schema.Types.ObjectId, ref: 'User' }]
+        }
     }, {
         toJSON: {
             versionKey: false,
@@ -44,10 +40,10 @@ const courseSchema = new Schema(
     }
 );
 
-courseSchema.index(
+schema.index(
     { authorId: 1, name: 1},
     { unique: true }
 );
 
-const Course = model("Course", courseSchema);
-module.exports = {Course};
+const Lesson = model("Lesson", schema);
+module.exports = {Lesson};
