@@ -1,21 +1,27 @@
+const random = require("./utils");
 const {Schema, model} = require("mongoose")
 
-const userSchema = new Schema(
+const schema = new Schema(
     {
         name: {
-            type: String,
-            required: true
-        },
-        email: {
             type: String,
             required: true,
             unique: true,
             index: true
         },
-        role: {
+        description: {
             type: String,
-            enum: ['ADMIN', 'AUTHOR', 'USER'],
-            default: 'USER'
+        },
+        authorId: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        links: {
+            type: [String]
+        },
+        files: {
+            type: [String]
         },
         rating: {
             type: [Number],
@@ -34,5 +40,10 @@ const userSchema = new Schema(
     }
 );
 
-const User = model("User", userSchema);
-module.exports = {User};
+schema.index(
+    { authorId: 1, name: 1},
+    { unique: true }
+);
+
+const Lesson = model("Lesson", schema);
+module.exports = {Lesson};
