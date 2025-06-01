@@ -1,53 +1,53 @@
 const random = require("./utils");
+const {Schema, model} = require("mongoose")
 
-// Course Model
-class Course {
-    constructor(id = null,
-                name = random.randomString(8),
-                description = random.randomString(50),
-                authorId = random.randomInt(),
-                tags = random.generateRandomStrings(3, 5),
-                // ....
-                rating = random.generateRandomNumbers(3, 0, 5),
-                ) {
-        this.id = id
-        this.name = name
-        this.description = description
-        this.authorId = authorId
-        this.tags = tags
-        // ......
-        this.rating = rating
+const courseSchema = new Schema(
+    {
+        name: {
+            type: String,
+            required: true,
+            unique: true,
+            index: true
+        },
+        description: {
+            type: String,
+        },
+        authorId: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        tags: {
+            type: [String]
+        },
+        difficulty: {
+            type: String,
+            enum: ['EASY', 'MEDIUM', 'HARD'],
+            default: 'MEDIUM'
+        },
+        rating: {
+            type: [Number],
+            validate: {
+                validator: (ratingArray) => {
+                    return !ratingArray || (ratingArray.every(num => num > 0 && num <= 5));
+                },
+                message: (p) => { return `'${p.value}' should be between 1 and 5` },
+            },
+            default: []
+        },
+        lessons: [{ type: Schema.Types.ObjectId, ref: 'Lesson' }],
+        students: [{ type: Schema.Types.ObjectId, ref: 'User' }]
+    }, {
+        toJSON: {
+            versionKey: false,
+        }
     }
-}
+);
 
-// Course Repository
-class CourseRepository {
-    #courses = []
-    #nextId = 1
+courseSchema.index(
+    { authorId: 1, name: 1},
+    { unique: true }
+);
 
-    getAll () {
-        //     pass
-    }
-
-    getById (id) {
-        //     pass
-    }
-
-    create (user) {
-        //     pass
-    }
-
-    update (id, updatedCourse) {
-        //     pass
-    }
-
-    delete (id) {
-        //     pass
-    }
-
-    rating (id, rating) {
-    //     pass
-    }
-}
-
-module.exports = {CourseRepository, Course};
+const Course = model("Course", courseSchema);
+module.exports = {Course};

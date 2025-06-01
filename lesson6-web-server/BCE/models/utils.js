@@ -19,9 +19,67 @@ function generateRandomStrings(lengthArray, lengthLine) {
     return Array.from({ length: lengthArray }, () => randomString(lengthLine));
 }
 
+function randomItemFromList(list) {
+    return list[Math.floor(Math.random()* list.length)];
+}
+
+function createRandomUser() {
+    return {
+        name: randomString(8)
+        , email: randomString(6) + '@mail.ru'
+        , role: randomItemFromList(['ADMIN', 'AUTHOR', 'USER'])
+        , rating: generateRandomNumbers(5, 1, 5)
+    }
+}
+
+function createRandomCourse(authorId, students = [], lessons = []) {
+    return {
+        name: randomString(15),
+        description: randomString(20),
+        authorId: authorId,
+        tags: [randomString(8), randomString(8), randomString(8)],
+        difficulty: randomItemFromList(['EASY', 'MEDIUM', 'HARD']),
+        rating: generateRandomNumbers(5, 1, 5),
+        lessons: lessons,
+        students: students
+    }
+}
+
+function randomCourseComment(courseId, authorId = undefined, comment= randomString(15)) {
+    return {
+        "authorId": authorId,
+        "courseId": courseId,
+        "comment": comment,
+    }
+}
+
+function createRandomLesson(authorId) {
+    return {
+        name: randomString(15),
+        description: randomString(30),
+        authorId: authorId,
+        links: [randomString(8), randomString(8), randomString(8)],
+        files: [randomString(8), randomString(8), randomString(8)],
+        rating: generateRandomNumbers(5, 1, 5),
+    }
+}
+
+function randomLessonComment(lessonId, authorId = undefined, comment= randomString(15)) {
+    return {
+        "authorId": authorId,
+        "lessonId": lessonId,
+        "comment": comment,
+    }
+}
+
 module.exports = {
     randomString,
     randomInt,
     generateRandomNumbers,
     generateRandomStrings,
+    createRandomUser,
+    createRandomCourse,
+    randomCourseComment,
+    createRandomLesson,
+    randomLessonComment
 }
