@@ -13,12 +13,16 @@ lessonRouter.get('/', async function (req, res, next) {
 
 // Get certain lesson
 lessonRouter.get('/:id', async (req, res) => {
-    const id = req.params.id;
-    const lesson = await Lesson.findById(id)
-    if (lesson) {
-        res.json(lesson)
-    } else {
-        return res.status(404).json({message: 'Lesson with id:' + id + ' not found'})
+    try {
+        const id = req.params.id;
+        const lesson = await Lesson.findById(id)
+        if (lesson) {
+            res.json(lesson)
+        } else {
+            return res.status(404).json({message: 'Lesson with id:' + id + ' not found'})
+        }
+    } catch (err) {
+        handleError(err, 'Lesson get server error', res)
     }
 });
 
@@ -73,14 +77,18 @@ lessonRouter.delete('/:id', async (req, res) => {
 
 // Get a lesson rating
 lessonRouter.get('/:id/rating', async (req, res) => {
-    const lesson = await Lesson.findById(req.params.id)
-    if (lesson) {
-        const averageRating = Math.round(lesson.rating.reduce((sum, currentValue) => sum + currentValue, 0) / lesson.rating.length)
-        res.json({
-            averageRating: averageRating ? averageRating : 0,
-        })
-    } else {
-        return res.status(404).json({message: 'Lesson not found'})
+    try {
+        const lesson = await Lesson.findById(req.params.id)
+        if (lesson) {
+            const averageRating = Math.round(lesson.rating.reduce((sum, currentValue) => sum + currentValue, 0) / lesson.rating.length)
+            res.json({
+                averageRating: averageRating ? averageRating : 0,
+            })
+        } else {
+            return res.status(404).json({message: 'Lesson not found'})
+        }
+    } catch (err) {
+        handleError(err, 'Lesson rating get server error', res)
     }
 })
 
@@ -113,8 +121,12 @@ lessonRouter.patch('/:id/rating', async (req, res) => {
 
 // Get certain lesson comments
 lessonRouter.get('/:id/comments', async (req, res) => {
-    const comments = await LessonComment.find({lessonId: req.params.id})
-    res.status(200).json(comments)
+    try {
+        const comments = await LessonComment.find({lessonId: req.params.id})
+        res.status(200).json(comments)
+    } catch (err) {
+        handleError(err, 'Lesson comments get server error', res)
+    }
 });
 
 // Create certain lesson comment

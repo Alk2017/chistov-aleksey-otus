@@ -13,12 +13,16 @@ courseRouter.get('/', async function (req, res, next) {
 
 // Get certain course
 courseRouter.get('/:id', async (req, res) => {
-    const id = req.params.id;
-    const course = await Course.findById(id)
-    if (course) {
-        res.json(course)
-    } else {
-        return res.status(404).json({message: 'Course with id:' + id + ' not found'})
+    try {
+        const id = req.params.id;
+        const course = await Course.findById(id)
+        if (course) {
+            res.json(course)
+        } else {
+            return res.status(404).json({message: 'Course with id:' + id + ' not found'})
+        }
+    } catch (err) {
+        handleError(err, 'Course get server error', res)
     }
 });
 
@@ -73,14 +77,18 @@ courseRouter.delete('/:id', async (req, res) => {
 
 // Get a course rating
 courseRouter.get('/:id/rating', async (req, res) => {
-    const course = await Course.findById(req.params.id)
-    if (course) {
-        const averageRating = Math.round(course.rating.reduce((sum, currentValue) => sum + currentValue, 0) / course.rating.length)
-        res.json({
-            averageRating: averageRating ? averageRating : 0,
-        })
-    } else {
-        return res.status(404).json({message: 'Course not found'})
+    try {
+        const course = await Course.findById(req.params.id)
+        if (course) {
+            const averageRating = Math.round(course.rating.reduce((sum, currentValue) => sum + currentValue, 0) / course.rating.length)
+            res.json({
+                averageRating: averageRating ? averageRating : 0,
+            })
+        } else {
+            return res.status(404).json({message: 'Course not found'})
+        }
+    } catch (err) {
+        handleError(err, 'Course rating get server error', res)
     }
 })
 
@@ -113,8 +121,12 @@ courseRouter.patch('/:id/rating', async (req, res) => {
 
 // Get certain course comments
 courseRouter.get('/:id/comments', async (req, res) => {
-    const comments = await CourseComment.find({ courseId: req.params.id})
-    res.status(200).json(comments)
+    try {
+        const comments = await CourseComment.find({ courseId: req.params.id})
+        res.status(200).json(comments)
+    } catch (err) {
+        handleError(err, 'Course comments get server error', res)
+    }
 });
 
 // Create certain course comment

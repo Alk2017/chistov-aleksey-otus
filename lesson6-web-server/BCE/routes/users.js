@@ -9,13 +9,18 @@ userRouter.get('/', async function (req, res, next) {
 });
 
 userRouter.get('/:id', async (req, res) => {
-  const id = req.params.id;
-  const user = await User.findById(id)
-  if (user) {
-    res.json(user)
-  } else {
-    return res.status(404).json({ message: 'User with id:'+id+' not found'})
+  try {
+    const id = req.params.id;
+    const user = await User.findById(id)
+    if (user) {
+      res.json(user)
+    } else {
+      return res.status(404).json({ message: 'User with id:'+id+' not found'})
+    }
+  } catch (err) {
+    handleError(err, 'User get server error', res)
   }
+
 });
 
 userRouter.post('/', async function (req, res, next) {
@@ -69,14 +74,18 @@ userRouter.delete('/:id', async (req, res) => {
 
 // Get a user rating
 userRouter.get('/:id/rating', async (req, res) => {
-  const user = await User.findById(req.params.id)
-  if (user) {
-    const averageRating = Math.round(user.rating.reduce((sum, currentValue) => sum + currentValue, 0) / user.rating.length)
-    res.json({
-      averageRating:averageRating ? averageRating : 0,
-    })
-  } else {
-    return res.status(404).json({message: 'User not found'})
+  try {
+    const user = await User.findById(req.params.id)
+    if (user) {
+      const averageRating = Math.round(user.rating.reduce((sum, currentValue) => sum + currentValue, 0) / user.rating.length)
+      res.json({
+        averageRating:averageRating ? averageRating : 0,
+      })
+    } else {
+      return res.status(404).json({message: 'User not found'})
+    }
+  } catch (err) {
+    handleError(err, 'User rating get server error', res)
   }
 })
 
