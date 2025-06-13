@@ -4,7 +4,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-var indexRouter = require('./routes/index');
+var indexRouter = require('./pages');
+var viewRouter = require('./pages/index-view');
 var {userRouter} = require('./routes/users');
 var {courseRouter} = require('./routes/courses');
 var {lessonRouter} = require('./routes/lessons');
@@ -23,6 +24,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
+app.use('/view', viewRouter);
 app.use('/users', userRouter);
 app.use('/courses', courseRouter);
 app.use('/lessons', lessonRouter);
